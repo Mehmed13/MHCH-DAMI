@@ -19,18 +19,30 @@ class DataLoader:
         """
         Constant variable declaration and configuration.
         """
+        # Get the base directory (where MHCH-DAMI is located)
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # Set data directory paths relative to base_dir
         if data_name == 'clothing':
-            dataset_folder_name = '/data/clothing'
+            dataset_folder_name = 'data/clothing'
         elif data_name == 'makeup':
-            dataset_folder_name = '/data/makeup'
+            dataset_folder_name = 'data/makeup'
         else:
             raise ValueError("Please confirm the correct data name you entered.")
 
-        base_dir = os.path.dirname(os.path.abspath(__file__))
+        # Construct full paths
         self.vocab_save_path = os.path.join(base_dir, dataset_folder_name, 'vocab.pkl')
         self.train_path = os.path.join(base_dir, dataset_folder_name, 'train.pkl')
         self.val_path = os.path.join(base_dir, dataset_folder_name, 'eval.pkl')
         self.test_path = os.path.join(base_dir, dataset_folder_name, 'test.pkl')
+
+        # Print paths for debugging
+        print(f"Data paths:")
+        print(f"Base dir: {base_dir}")
+        print(f"Vocab path: {self.vocab_save_path}")
+        print(f"Train path: {self.train_path}")
+        print(f"Val path: {self.val_path}")
+        print(f"Test path: {self.test_path}")
 
         # Setup logging
         self.logger = logging.getLogger("Data Preprocessing")
@@ -109,7 +121,7 @@ class DataLoader:
         
         if nb_classes:
             labels_padded = pad_sequences(label_list[i:i + batch_size], maxlen=30, padding='post', truncating='post', dtype='int32', value=0)
-            batch_labels = to_categorical(labels_padded, nb_classes, dtype='int32')
+            batch_labels = to_categorical(labels_padded, nb_classes)
             return batch_x1, batch_x2, batch_x3, batch_labels, batch_sent_len, batch_dia_len
         else:
             labels_padded = pad_sequences(label_list[i:i + batch_size], maxlen=30, padding='post', truncating='post', dtype='int32', value=0)
@@ -182,6 +194,23 @@ class DataLoader:
                 x1, x2, x3, label_list, sent_len, dia_len, i, batch_size, nb_classes
             )
             batch_tf = tf_list[i:i + batch_size]
-            batch_paded_pos = pad_sequences(pos_list[i:i + batch_size], maxlen=30, padding='post', truncating='post', dtype='int32')
+            # Pad position list with proper dimensions
+            batch_pos = pos_list[i:i + batch_size]
+            # Initialize with shape [batch_size, dia_max_len, sent_max_len, pos_dim]
+            batch_paded_pos = np.zeros((len(batch_pos), 30, 50, 52), dtype=np.int32)
+            
+            for j, dialogue in enumerate(batch_pos):
+                for k, sentence in enumerate(dialogue[:30]):  # Truncate to max 30 sentences
+                    if k < len(dialogue):
+                        # Convert sentence to numpy array first
+                        sentence_array = np.array(sentence)
+                        # Pad or truncate each position to match pos_dim
+                        for m, pos in enumerate(sentence[:50]):  # Truncate to max 50 positions per sentence
+                            pos_array = np.array(pos) if isinstance(pos, (list, np.ndarray)) else np.array([pos])
+                            if len(pos_array) > 52:
+                                batch_paded_pos[j, k, m, :] = pos_array[:52]
+                            else:
+                                batch_paded_pos[j, k, m, :len(pos_array)] = pos_array
+                                # Rest is already zeros from initialization
             
             yield batch_x1, batch_x2, batch_x3, batch_tf, batch_paded_pos, batch_labels, batch_sent_len, batch_dia_len 

@@ -174,6 +174,10 @@ def positional_encoding(inputs, maxlen, masking=True):
     maxlen: scalar. Must be >= T
     masking: Boolean. If True, padding positions are set to zeros.
     """
+    # Get input dtype and convert to float32 for computation
+    input_dtype = inputs.dtype
+    inputs = tf.cast(inputs, tf.float32)
+    
     E = inputs.get_shape().as_list()[-1]  # static
     N, T = tf.shape(inputs)[0], tf.shape(inputs)[1]  # dynamic
     position_ind = tf.tile(tf.expand_dims(tf.range(T), 0), [N, 1])  # (N, T)
@@ -195,7 +199,8 @@ def positional_encoding(inputs, maxlen, masking=True):
     if masking:
         outputs = tf.where(tf.equal(inputs, 0), inputs, outputs)
 
-    return tf.cast(outputs, tf.float32)
+    # Convert back to input dtype
+    return tf.cast(outputs, input_dtype)
 
 def noam_scheme(init_lr, global_step, warmup_steps=4000.):
     """Noam scheme learning rate decay
