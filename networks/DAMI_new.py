@@ -6,6 +6,7 @@ import sys
 import time
 import numpy as np
 import tensorflow as tf
+import logging
 from tensorflow.keras import layers, models, optimizers
 from tensorflow.keras.layers import LSTM, Bidirectional, Dense, Dropout, Layer
 from tensorflow.keras.initializers import GlorotNormal
@@ -33,14 +34,16 @@ class DAMI(tf.keras.Model):
         self.sent_max_len = 50
         self.nb_classes = 2
         self.embedding_dim = 200
+        self.nb_words = None
+        self.data_name = None
+        self.name = None
         
         # Initialize layers
-        self.embedding_layer = layers.Embedding(
-            input_dim=vocab.size() + 1,
-            output_dim=self.embedding_dim,
-            embeddings_initializer=tf.constant_initializer(vocab.embeddings) if vocab.embeddings is not None else GlorotNormal(),
-            trainable=True
-        )
+        self.embedding_layer = None  # Will be initialized when nb_words is set
+        if vocab and vocab.embeddings is not None:
+            self.embeddings = vocab.embeddings
+        else:
+            self.embeddings = None
         
         self.dropout = Dropout(0.5)
         
@@ -59,6 +62,40 @@ class DAMI(tf.keras.Model):
         
         # Optimizer
         self.optimizer = optimizers.Adam(learning_rate=self.lr)
+
+    def set_nb_words(self, nb_words):
+        """Set the vocabulary size and initialize the embedding layer"""
+        self.nb_words = nb_words
+        self.embedding_layer = layers.Embedding(
+            input_dim=self.nb_words,
+            output_dim=self.embedding_dim,
+            embeddings_initializer=tf.constant_initializer(self.embeddings) if self.embeddings is not None else GlorotNormal(),
+            trainable=True
+        )
+
+    def set_data_name(self, data_name):
+        """Set the data name"""
+        self.data_name = data_name
+
+    def set_name(self, name):
+        """Set the model name"""
+        self.name = name
+
+    def set_from_model_config(self, model_config):
+        """Set parameters from model config"""
+        # Already handled in __init__
+        pass
+
+    def set_from_data_config(self, data_config):
+        """Set parameters from data config"""
+        if 'nb_classes' in data_config:
+            self.nb_classes = data_config['nb_classes']
+            # Reinitialize output layer with new number of classes
+            self.output_layer = Dense(self.nb_classes, activation='softmax')
+
+    def build_graph(self):
+        """Build the model graph - no-op in Keras, as graph is built dynamically"""
+        pass
 
     def call(self, inputs, training=False):
         # Unpack inputs
