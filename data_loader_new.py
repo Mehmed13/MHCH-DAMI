@@ -184,8 +184,4 @@ class DataLoader:
             batch_tf = tf_list[i:i + batch_size]
             batch_paded_pos = pad_sequences(pos_list[i:i + batch_size], maxlen=30, padding='post', truncating='post', dtype='int32')
             
-            yield batch_x1, batch_x2, batch_x3, batch_tf, batch_paded_pos, batch_labels, batch_sent_len, batch_dia_len
-
-
-if __name__ == "__main__":
-    pass
+            yield batch_x1, batch_x2, batch_x3, batch_tf, batch_paded_pos, batch_labels, batch_sent_len, batch_dia_len 

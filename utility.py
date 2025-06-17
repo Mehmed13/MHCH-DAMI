@@ -6,22 +6,23 @@ import sys
 import resource
 import time
 import warnings
-warnings.filterwarnings('ignore',category=FutureWarning)
 import tensorflow as tf
 import numpy as np
 import math
 
+warnings.filterwarnings('ignore', category=FutureWarning)
 
 def get_now_time():
-    now_time = '_'.join(time.asctime(time.localtime(time.time())).split(' '))  # [:3])
+    """Get current time in a formatted string"""
+    now_time = '_'.join(time.asctime(time.localtime(time.time())).split(' '))
     return now_time
 
-
 def print_trainable_variables(output_detail, logger):
+    """Print information about trainable variables"""
     total_parameters = 0
     parameters_string = ""
 
-    for variable in tf.compat.v1.trainable_variables():
+    for variable in tf.keras.Model.trainable_variables:
 
         shape = variable.get_shape()
         variable_parameters = 1
@@ -36,18 +37,18 @@ def print_trainable_variables(output_detail, logger):
     if logger:
         if output_detail:
             logger.info('\n' + parameters_string)
-        logger.info("Total %d variables, %s params" % (len(tf.compat.v1.trainable_variables()), "{:,}".format(total_parameters)))
+        logger.info("Total %d variables, %s params" % (len(tf.keras.Model.trainable_variables), "{:,}".format(total_parameters)))
     else:
         if output_detail:
             print('\n' + parameters_string)
-        print("Total %d variables, %s params" % (len(tf.trainable_variables()), "{:,}".format(total_parameters)))
-
+        print("Total %d variables, %s params" % (len(tf.keras.Model.trainable_variables), "{:,}".format(total_parameters)))
 
 def print_all_variables(output_detail, logger=None):
+    """Print information about all variables"""
     total_parameters = 0
     parameters_string = ""
 
-    for variable in tf.all_variables():
+    for variable in tf.keras.Model.variables:
 
         shape = variable.get_shape()
         variable_parameters = 1
@@ -62,14 +63,14 @@ def print_all_variables(output_detail, logger=None):
     if logger is not None:
         if output_detail:
             logger.info('\n' + parameters_string)
-        logger.info("Total %d variables, %s params" % (len(tf.all_variables()), "{:,}".format(total_parameters)))
+        logger.info("Total %d variables, %s params" % (len(tf.keras.Model.variables), "{:,}".format(total_parameters)))
     else:
         if output_detail:
             print('\n' + parameters_string)
-        print("Total %d variables, %s params" % (len(tf.all_variables()), "{:,}".format(total_parameters)))
-
+        print("Total %d variables, %s params" % (len(tf.keras.Model.variables), "{:,}".format(total_parameters)))
 
 def show_layer_info(layer_name, layer_out, logger=None):
+    """Show information about a layer's output shape"""
     if logger:
         logger.info('[layer]: %s\t[shape]: %s'
                     % (layer_name, str(layer_out.get_shape().as_list())))
@@ -77,8 +78,8 @@ def show_layer_info(layer_name, layer_out, logger=None):
         print('[layer]: %s\t[shape]: %s'
               % (layer_name, str(layer_out.get_shape().as_list())))
 
-
 def show_layer_info_with_memory(layer_name, layer_out, logger=None):
+    """Show information about a layer's output shape and memory usage"""
     if logger:
         logger.info('[layer]: %s\t[shape]: %s \n%s'
                     % (layer_name, str(layer_out.get_shape().as_list()), show_memory_use()))
@@ -86,8 +87,8 @@ def show_layer_info_with_memory(layer_name, layer_out, logger=None):
         print('[layer]: %s\t[shape]: %s \n%s'
               % (layer_name, str(layer_out.get_shape().as_list()), show_memory_use()))
 
-
 def show_memory_use():
+    """Show current memory usage"""
     rusage_denom = 1024.
     if sys.platform == 'darwin':
         rusage_denom = rusage_denom * rusage_denom
@@ -99,8 +100,8 @@ def show_memory_use():
               (total_memory, ru.ru_maxrss, ru.ru_ixrss, ru.ru_idrss, ru.ru_isrss)
     return strinfo
 
-
 def get_a_p_r_f_sara(target, predict, category):
+    """Calculate accuracy, precision, recall, F1 score, and SARA metrics"""
     idx = np.array(range(len(target)))
     _target = set(idx[target == category])
     _predict = set(idx[predict == category])
@@ -120,8 +121,8 @@ def get_a_p_r_f_sara(target, predict, category):
     f2_score = precision * recall * (1+2*2) / (2*2*precision + recall + 0.0000000001)
     return accuracy, precision, recall, f1_score, macro_f1_score, f0_5_score, f2_score
 
-
 def golden_transfer_within_tolerance_exp(pre_labels, true_labels, t=1, eps=1e-7, lamb=0):
+    """Calculate golden transfer score with tolerance"""
     if t <= 0:
         raise ValueError("Tolerance must be positive!!!")
     if not isinstance(t, int):
@@ -161,8 +162,8 @@ def golden_transfer_within_tolerance_exp(pre_labels, true_labels, t=1, eps=1e-7,
             gtt_score = np.mean(gtt_score_list)
     return gtt_score
 
-
 def get_gtt_score(label_list, pre_list, lamb=0.):
+    """Calculate GTT scores for different tolerance values"""
     gtt_score_list_1 = []
     gtt_score_list_2 = []
     gtt_score_list_3 = []
@@ -172,7 +173,6 @@ def get_gtt_score(label_list, pre_list, lamb=0.):
         gtt_score_list_3.append(golden_transfer_within_tolerance_exp(pres, labels, t=3, lamb=lamb))
 
     return np.mean(gtt_score_list_1), np.mean(gtt_score_list_2), np.mean(gtt_score_list_3)
-
 
 if __name__ == "__main__":
     pass
