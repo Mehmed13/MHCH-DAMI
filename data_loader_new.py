@@ -129,7 +129,6 @@ class DataLoader:
 
     def data_generator_sup(self, data_name='makeup', mode='test', batch_size=32, shuffle=True, nb_classes=2, epoch=0):
         """Supervised learning data generator"""
-        print('Using data_generator_sup')
         self.load_pkl_data(mode=mode)
         
         x1 = self.dialogues_ids_list
@@ -150,7 +149,6 @@ class DataLoader:
 
     def data_generator_crf(self, data_name='makeup', mode='test', batch_size=32, shuffle=True, nb_classes=2, epoch=0):
         """CRF data generator"""
-        print('Using data_generator_crf')
         self.load_pkl_data(mode=mode)
         
         x1 = self.dialogues_ids_list
@@ -171,7 +169,6 @@ class DataLoader:
 
     def data_generator_m(self, data_name='makeup', mode='test', batch_size=32, shuffle=True, nb_classes=2, epoch=0):
         """Multi-task data generator"""
-        print('Using data_generator_m')
         self.load_pkl_data(mode=mode)
         
         x1 = self.dialogues_ids_list
